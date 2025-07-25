@@ -13,6 +13,8 @@ export default function App() {
   const [currentFilter, setCurrentFilter] = useState('');
   const [currentStatsView, setCurrentStatsView] = useState('basic');
   const [activeMainTab, setActiveMainTab] = useState('projections');
+  const [loadingData, setLoadingData] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
   
   // Form state
   const [leagueSettings, setLeagueSettings] = useState({
@@ -32,6 +34,46 @@ export default function App() {
     ruYDS: 0.1, ruTDS: 6, reYDS: 0.1, reTDS: 6, reREC: 1, 
     paYDS: 0.04, paTDS: 4, INTS: -2
   });
+
+  // Auto-load CSV files on component mount
+  useEffect(() => {
+    loadProjectionsData();
+    loadStatsData();
+  }, []);
+
+  const loadProjectionsData = async () => {
+    setLoadingData(true);
+    try {
+      const response = await fetch('/data/final_proj.csv');
+      if (response.ok) {
+        const text = await response.text();
+        const parsed = parseCSV(text);
+        setData(parsed);
+      } else {
+        console.log('Projections CSV not found - upload feature still available');
+      }
+    } catch (error) {
+      console.log('Could not auto-load projections:', error);
+    }
+    setLoadingData(false);
+  };
+
+  const loadStatsData = async () => {
+    setLoadingStats(true);
+    try {
+      const response = await fetch('/data/prev_stats.csv');
+      if (response.ok) {
+        const text = await response.text();
+        const parsed = parseStatsCSV(text);
+        setStatsData(parsed);
+      } else {
+        console.log('Stats CSV not found - upload feature still available');
+      }
+    } catch (error) {
+      console.log('Could not auto-load stats:', error);
+    }
+    setLoadingStats(false);
+  };
 
   const parseCSV = (text) => {
     const lines = text.split('\n').filter(l => l.trim());
@@ -450,22 +492,36 @@ export default function App() {
             </div>
 
             <div className="section">
-              <h3>Upload Data</h3>
-              <div className={`file-upload ${data ? 'active' : ''}`}>
-                <div>📊</div>
-                <p>Upload CSV File</p>
-                <input 
-                  type="file" 
-                  accept=".csv" 
-                  onChange={(e) => handleFileUpload(e, false)}
-                  style={{display: 'none'}} 
-                  id="file-upload"
-                />
-              </div>
-              <label htmlFor="file-upload" className="file-upload" style={{cursor: 'pointer'}}>
-                <div>📊</div>
-                <p>{data ? `✅ ${data.length} players loaded` : 'Upload CSV File'}</p>
-              </label>
+              <h3>Data Source</h3>
+              {loadingData ? (
+                <div style={{textAlign: 'center', padding: '20px'}}>
+                  <p>Loading projections data...</p>
+                </div>
+              ) : data ? (
+                <div className="success">
+                  ✅ Projections loaded: {data.length} players
+                  <br />
+                  <small>Auto-loaded from final_proj.csv</small>
+                </div>
+              ) : (
+                <>
+                  <div className={`file-upload`}>
+                    <div>📊</div>
+                    <p>Auto-load failed - Upload CSV File</p>
+                    <input 
+                      type="file" 
+                      accept=".csv" 
+                      onChange={(e) => handleFileUpload(e, false)}
+                      style={{display: 'none'}} 
+                      id="file-upload"
+                    />
+                  </div>
+                  <label htmlFor="file-upload" className="file-upload" style={{cursor: 'pointer'}}>
+                    <div>📊</div>
+                    <p>Upload Projections CSV</p>
+                  </label>
+                </>
+              )}
             </div>
           </div>
 
@@ -523,267 +579,3 @@ export default function App() {
                   className={`pos-tab ${activeTab === 'ALL' ? 'active' : ''}`}
                   onClick={() => setActiveTab('ALL')}
                 >
-                  ALL
-                </button>
-                {['QB', 'RB', 'WR', 'TE'].map(pos => (
-                  <button 
-                    key={pos}
-                    className={`pos-tab ${activeTab === pos ? 'active' : ''}`}
-                    onClick={() => setActiveTab(pos)}
-                  >
-                    {pos}
-                  </button>
-                ))}
-              </div>
-
-              {renderTable(results, 'projections')}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Stats Tab */}
-      {activeMainTab === 'stats' && (
-        <div className="tab-content active">
-          <div className="grid">
-            <div className="section">
-              <h3>League Settings</h3>
-              <div className="form-row">
-                <div>
-                  <label>Teams</label>
-                  <input 
-                    type="number" 
-                    value={statsLeagueSettings.teams}
-                    onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, teams: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>QB</label>
-                  <input 
-                    type="number" 
-                    value={statsLeagueSettings.qb}
-                    onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, qb: +e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div>
-                  <label>RB</label>
-                  <input 
-                    type="number" 
-                    value={statsLeagueSettings.rb}
-                    onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, rb: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>WR</label>
-                  <input 
-                    type="number" 
-                    value={statsLeagueSettings.wr}
-                    onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, wr: +e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div>
-                  <label>TE</label>
-                  <input 
-                    type="number" 
-                    value={statsLeagueSettings.te}
-                    onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, te: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>FLEX</label>
-                  <input 
-                    type="number" 
-                    value={statsLeagueSettings.flex}
-                    onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, flex: +e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="section">
-              <h3>Scoring Settings</h3>
-              <div className="form-row">
-                <div>
-                  <label>Rush Yds</label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    value={statsScoringSettings.ruYDS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, ruYDS: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>Rush TDs</label>
-                  <input 
-                    type="number" 
-                    value={statsScoringSettings.ruTDS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, ruTDS: +e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div>
-                  <label>Rec Yds</label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    value={statsScoringSettings.reYDS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, reYDS: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>Rec TDs</label>
-                  <input 
-                    type="number" 
-                    value={statsScoringSettings.reTDS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, reTDS: +e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div>
-                  <label>Receptions</label>
-                  <input 
-                    type="number" 
-                    value={statsScoringSettings.reREC}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, reREC: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>Pass Yds</label>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    value={statsScoringSettings.paYDS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, paYDS: +e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="form-row">
-                <div>
-                  <label>Pass TDs</label>
-                  <input 
-                    type="number" 
-                    value={statsScoringSettings.paTDS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, paTDS: +e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label>INTs</label>
-                  <input 
-                    type="number" 
-                    value={statsScoringSettings.INTS}
-                    onChange={(e) => setStatsScoringSettings({...statsScoringSettings, INTS: +e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="section">
-              <h3>Upload Data</h3>
-              <label htmlFor="stats-file-upload" className={`file-upload ${statsData ? 'active' : ''}`} style={{cursor: 'pointer'}}>
-                <div>📊</div>
-                <p>{statsData ? `✅ ${statsData.length} players loaded` : 'Upload CSV File'}</p>
-                <input 
-                  type="file" 
-                  accept=".csv" 
-                  onChange={(e) => handleFileUpload(e, true)}
-                  style={{display: 'none'}} 
-                  id="stats-file-upload"
-                />
-              </label>
-            </div>
-          </div>
-
-          <button 
-            className="btn" 
-            onClick={calculateStats}
-            disabled={!statsData}
-          >
-            Calculate 2024 Stats
-          </button>
-
-          {statsResults && (
-            <div className="results show">
-              <div className="controls">
-                <h2>2024 Results</h2>
-                <div className="filter-controls">
-                  <input 
-                    type="text" 
-                    placeholder="Filter players..." 
-                    className="filter-input"
-                    value={currentFilter}
-                    onChange={(e) => setCurrentFilter(e.target.value)}
-                  />
-                  <button 
-                    className="clear-btn"
-                    onClick={() => setCurrentFilter('')}
-                  >
-                    Clear
-                  </button>
-                  <button 
-                    className="btn export-btn"
-                    onClick={() => exportCSV('stats')}
-                  >
-                    Export CSV
-                  </button>
-                </div>
-              </div>
-
-              <div className="stats-view-tabs">
-                <button 
-                  className={`stats-view-tab ${currentStatsView === 'basic' ? 'active' : ''}`}
-                  onClick={() => setCurrentStatsView('basic')}
-                >
-                  Basic Stats
-                </button>
-                <button 
-                  className={`stats-view-tab ${currentStatsView === 'advanced' ? 'active' : ''}`}
-                  onClick={() => setCurrentStatsView('advanced')}
-                >
-                  Advanced Stats
-                </button>
-              </div>
-
-              <div className="pos-tabs">
-                <button 
-                  className={`pos-tab ${activeStatsTab === 'ALL' ? 'active' : ''}`}
-                  onClick={() => setActiveStatsTab('ALL')}
-                >
-                  ALL
-                </button>
-                {['QB', 'RB', 'WR', 'TE'].map(pos => (
-                  <button 
-                    key={pos}
-                    className={`pos-tab ${activeStatsTab === pos ? 'active' : ''}`}
-                    onClick={() => setActiveStatsTab(pos)}
-                  >
-                    {pos}
-                  </button>
-                ))}
-              </div>
-
-              {renderTable(statsResults, 'stats')}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ADP Tab */}
-      {activeMainTab === 'adp' && (
-        <div className="tab-content active">
-          <div className="coming-soon">
-            <h3>ADP Analysis Coming Soon</h3>
-            <p style={{marginTop: '12px', color: '#64748b'}}>
-              Advanced draft position analytics and value identification tools
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
