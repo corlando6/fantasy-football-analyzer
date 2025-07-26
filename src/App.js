@@ -33,79 +33,85 @@ export default function App() {
     paYDS: 0.04, paTDS: 4, INTS: -2
   });
 
-  const parseCSV = (text) => {
-    const lines = text.split('\n').filter(l => l.trim());
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const row = {};
-      headers.forEach((h, i) => row[h] = values[i] || '');
-      return {
-        Player: row.Player || '',
-        Team: row.Team || '',
-        Position: row.Position || '',
-        ruATT: +row.ruATT || 0, ruYDS: +row.ruYDS || 0, ruTDS: +row.ruTDS || 0,
-        reREC: +row.reREC || 0, reYDS: +row.reYDS || 0, reTDS: +row.reTDS || 0,
-        paATT: +row.paATT || 0, paCMP: +row.paCMP || 0, paYDS: +row.paYDS || 0,
-        paTDS: +row.paTDS || 0, INTS: +row.INTS || 0
-      };
-    });
-  };
+  // Auto-load projections CSV on component mount
+  useEffect(() => {
+    const fetchProjections = async () => {
+      try {
+        const res = await fetch('/fantasy-football-analyzer/data/final_proj.csv');
+        const text = await res.text();
+        const parsed = parseCSV(text);
+        setData(parsed);
+      } catch (error) {
+        console.error('Error loading projections CSV:', error);
+      }
+    };
+    fetchProjections();
+  }, []);
 
-  const parseStatsCSV = (text) => {
-    const lines = text.split('\n').filter(l => l.trim());
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-      const row = {};
-      headers.forEach((h, i) => row[h] = values[i] || '');
-      
-      return {
-        Player: row.merge_name || '',
-        Team: row.team || '',
-        Position: row.position || '',
-        Games: +row.games || 0,
-        ruATT: +row.carries || 0,
-        ruYDS: +row.rushing_yards || 0,
-        ruTDS: +row.rushing_tds || 0,
-        reREC: +row.receptions || 0,
-        reYDS: +row.receiving_yards || 0,
-        reTDS: +row.receiving_tds || 0,
-        paATT: +row.attempts || 0,
-        paCMP: +row.completions || 0,
-        paYDS: +row.passing_yards || 0,
-        paTDS: +row.passing_tds || 0,
-        INTS: +row.interceptions || 0,
-        sacks: +row.sacks || 0,
-        sackYards: +row.sack_yards || 0,
-        passingAirYards: +row.passing_air_yards || 0,
-        passingYAC: +row.passing_yards_after_catch || 0,
-        passingFirstDowns: +row.passing_first_downs || 0,
-        passingEPA: +row.passing_epa || 0,
-        pacr: +row.pacr || 0,
-        dakota: +row.dakota || 0,
-        rushingFirstDowns: +row.rushing_first_downs || 0,
-        rushingEPA: +row.rushing_epa || 0,
-        targets: +row.targets || 0,
-        receivingAirYards: +row.receiving_air_yards || 0,
-        receivingYAC: +row.receiving_yards_after_catch || 0,
-        receivingFirstDowns: +row.receiving_first_downs || 0,
-        receivingEPA: +row.receiving_epa || 0,
-        racr: +row.racr || 0,
-        targetShare: +row.target_share || 0,
-        airYardsShare: +row.air_yards_share || 0,
-        dom: +row.dom || 0,
-        fantasyPoints: +row.fantasy_points || 0,
-        fantasyPointsPPR: +row.fantasy_points_ppr || 0,
-        tgtSh: +row.tgt_sh || 0,
-        aySh: +row.ay_sh || 0,
-        yacSh: +row.yac_sh || 0,
-        rySh: +row.ry_sh || 0,
-        rtdSh: +row.rtd_sh || 0
-      };
-    }).filter(p => p.Player && p.Position);
-  };
+  // Auto-load stats CSV on component mount
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/fantasy-football-analyzer/data/prev_stats.csv');
+        const text = await res.text();
+        const parsed = parseStatsCSV(text);
+        setStatsData(parsed);
+      } catch (error) {
+        console.error('Error loading stats CSV:', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
+const parseCSV = (text) => {
+  const result = Papa.parse(text, {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    delimitersToGuess: [',', '\t', '|', ';']
+  });
+  
+  return result.data.map(row => ({
+    Player: row.Player || '',
+    Team: row.Team || '',
+    Position: row.Position || '',
+    ruATT: +row.ruATT || 0, ruYDS: +row.ruYDS || 0, ruTDS: +row.ruTDS || 0,
+    reREC: +row.reREC || 0, reYDS: +row.reYDS || 0, reTDS: +row.reTDS || 0,
+    paATT: +row.paATT || 0, paCMP: +row.paCMP || 0, paYDS: +row.paYDS || 0,
+    paTDS: +row.paTDS || 0, INTS: +row.INTS || 0
+  })).filter(p => p.Player && p.Position);
+};
+
+const parseStatsCSV = (text) => {
+  const result = Papa.parse(text, {
+    header: true,
+    dynamicTyping: true,
+    skipEmptyLines: true,
+    delimitersToGuess: [',', '\t', '|', ';']
+  });
+  
+  return result.data.map(row => ({
+    Player: row.merge_name || row.player_name || row.Player || '',
+    Team: row.team || row.Team || '',
+    Position: row.position || row.Position || '',
+    Games: +row.games || 0,
+    ruATT: +row.carries || 0,
+    ruYDS: +row.rushing_yards || 0,
+    ruTDS: +row.rushing_tds || 0,
+    reREC: +row.receptions || 0,
+    reYDS: +row.receiving_yards || 0,
+    reTDS: +row.receiving_tds || 0,
+    paATT: +row.attempts || 0,
+    paCMP: +row.completions || 0,
+    paYDS: +row.passing_yards || 0,
+    paTDS: +row.passing_tds || 0,
+    INTS: +row.interceptions || 0,
+    targets: +row.targets || 0,
+    receivingAirYards: +row.receiving_air_yards || 0,
+    receivingYAC: +row.receiving_yards_after_catch || 0,
+    receivingEPA: +row.receiving_epa || 0
+  })).filter(p => p.Player && p.Position);
+};
   const calcPoints = (players, scoring) => {
     return players.map(p => ({
       ...p,
@@ -113,24 +119,6 @@ export default function App() {
             p.reYDS * scoring.reYDS + p.reTDS * scoring.reTDS + p.reREC * scoring.reREC +
             p.paYDS * scoring.paYDS + p.paTDS * scoring.paTDS + p.INTS * scoring.INTS
     }));
-  };
-
-  const handleFileUpload = async (event, isStats = false) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    try {
-      const text = await file.text();
-      if (isStats) {
-        const parsed = parseStatsCSV(text);
-        setStatsData(parsed);
-      } else {
-        const parsed = parseCSV(text);
-        setData(parsed);
-      }
-    } catch (error) {
-      console.error('Error processing file:', error);
-    }
   };
 
   const calculateProjections = () => {
@@ -233,7 +221,15 @@ export default function App() {
                 <th>Pos</th>
                 <th className="numeric">FPTS</th>
                 {tabType === 'projections' && <th className="numeric">VORP</th>}
-                {tabType === 'stats' && <th className="numeric">Games</th>}
+                {tabType === 'stats' && currentStatsView === 'basic' && <th className="numeric">Games</th>}
+                {tabType === 'stats' && currentStatsView === 'advanced' && (
+                  <>
+                    <th className="numeric">Targets</th>
+                    <th className="numeric">ReAirYds</th>
+                    <th className="numeric">ReYAC</th>
+                    <th className="numeric">ReEPA</th>
+                  </>
+                )}
                 <th className="numeric">RuAtt</th>
                 <th className="numeric">RuYds</th>
                 <th className="numeric">RuTD</th>
@@ -259,7 +255,17 @@ export default function App() {
                       {p.VORP.toFixed(1)}
                     </td>
                   )}
-                  {tabType === 'stats' && <td className="numeric">{p.Games || 0}</td>}
+                  {tabType === 'stats' && currentStatsView === 'basic' && (
+                    <td className="numeric">{p.Games || 0}</td>
+                  )}
+                  {tabType === 'stats' && currentStatsView === 'advanced' && (
+                    <>
+                      <td className="numeric">{p.targets || 0}</td>
+                      <td className="numeric">{p.receivingAirYards || 0}</td>
+                      <td className="numeric">{p.receivingYAC || 0}</td>
+                      <td className="numeric">{p.receivingEPA?.toFixed(2) || 0}</td>
+                    </>
+                  )}
                   <td className="numeric">{p.ruATT}</td>
                   <td className="numeric">{p.ruYDS}</td>
                   <td className="numeric">{p.ruTDS}</td>
@@ -284,7 +290,7 @@ export default function App() {
     <div className="container">
       <div className="header">
         <div className="header-left">
-          <h1>🏈 Fantasy Football Analysis</h1>
+          <h1>Fantasy Football '25</h1>
           <div className="header-tabs">
             <button 
               className={`header-tab-btn ${activeMainTab === 'projections' ? 'active' : ''}`}
@@ -449,20 +455,10 @@ export default function App() {
               </div>
             </div>
 
-            <div className="section">
-              <h3>Upload Data</h3>
-              <label htmlFor="file-upload" className={`file-upload ${data ? 'active' : ''}`} style={{ cursor: 'pointer' }}>
-                <div>📊</div>
-                <p>{data ? `✅ ${data.length} players loaded` : 'Upload CSV File'}</p>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => handleFileUpload(e, false)}
-                  style={{ display: 'none' }}
-                  id="file-upload"
-                />
-              </label>
-            </div>
+            {/* <div className="section">
+              <h3>Data Status</h3>
+              <p>{data ? `✅ ${data.length} players loaded` : 'Loading projections...'}</p>
+            </div> */}
           </div>
 
           <button 
@@ -679,20 +675,10 @@ export default function App() {
               </div>
             </div>
 
-            <div className="section">
-              <h3>Upload Data</h3>
-              <label htmlFor="stats-file-upload" className={`file-upload ${statsData ? 'active' : ''}`} style={{cursor: 'pointer'}}>
-                <div>📊</div>
-                <p>{statsData ? `✅ ${statsData.length} players loaded` : 'Upload CSV File'}</p>
-                <input 
-                  type="file" 
-                  accept=".csv" 
-                  onChange={(e) => handleFileUpload(e, true)}
-                  style={{display: 'none'}} 
-                  id="stats-file-upload"
-                />
-              </label>
-            </div>
+            {/* <div className="section">
+              <h3>Data Status</h3>
+              <p>{statsData ? `✅ ${statsData.length} players loaded` : 'Loading 2024 stats...'}</p>
+            </div> */}
           </div>
 
           <button 
