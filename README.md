@@ -11,6 +11,6 @@ Takes your projection CSV files and automatically calculates Value Over Replacem
 Main features:
 - Auto-loads CSV files (`final_proj.csv` for projections, `prev_stats.csv` for stats)
 - Calculates VORP and replacement levels by position
-- Customizable scoring (PPR, standard, whatever)
+- Customizable scoring (PPR, standard, etc.)
 - Works with any league size/roster setup
 - Export filtered results back to CSV
