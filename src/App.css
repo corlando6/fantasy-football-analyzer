@@ -363,7 +363,7 @@ input:focus, select:focus {
     margin-top: 4px;
 }
 
-/* Table Section - Improved Scrolling and Zooming */
+/* Table Section - Fixed Sticky Column Implementation */
 .table-section {
     background: #ffffff;
     border-radius: 12px;
@@ -382,46 +382,54 @@ input:focus, select:focus {
     /* Enable smooth scrolling */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    /* Allow user to zoom */
-    zoom: 1;
-    transform-origin: top left;
+    /* Important for sticky columns */
+    overflow-x: auto;
+    overflow-y: auto;
 }
 
-/* Zoom controls could be added here if needed */
 .table-container:hover {
-    /* Visual feedback for interaction */
     border-color: #cbd5e1;
 }
 
 table { 
     width: 100%; 
-    border-collapse: collapse; 
+    border-collapse: separate;
+    border-spacing: 0;
     background: white; 
-    /* Ensure table is wide enough to show all columns */
     min-width: 1600px;
-    table-layout: auto;
+    table-layout: fixed;
+    position: relative;
 }
 
-/* Column width optimization for better readability */
-th:first-child, td:first-child {
-    width: 180px;
-    min-width: 180px;
-    max-width: 200px;
-    padding-right: 12px;
+/* Sticky First Column - Player Names */
+th:first-child, 
+td:first-child {
     position: sticky;
     left: 0;
-    background: inherit;
-    z-index: 2;
+    z-index: 15;
+    min-width: 180px;
+    width: 180px;
+    background: white;
+    border-right: 2px solid #e2e8f0;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Ensure sticky header for first column */
+thead th:first-child {
+    background: #000000;
+    z-index: 25;
+    border-right: 2px solid #374151;
+}
+
+/* Regular column widths */
 th:nth-child(2), td:nth-child(2) {
     width: 80px;
     min-width: 80px;
 }
 
 th:nth-child(3), td:nth-child(3) {
-    width: 60px;
-    min-width: 60px;
+    width: 70px;
+    min-width: 70px;
 }
 
 th:nth-child(n+4), td:nth-child(n+4) {
@@ -429,11 +437,15 @@ th:nth-child(n+4), td:nth-child(n+4) {
     min-width: 90px;
 }
 
+/* Sticky Header Row */
 thead { 
-    background: linear-gradient(135deg, #000000 0%, #000000 100%);
     position: sticky; 
     top: 0;
-    z-index: 10;
+    z-index: 20;
+}
+
+thead tr {
+    background: linear-gradient(135deg, #000000 0%, #000000 100%);
 }
 
 th { 
@@ -442,16 +454,22 @@ th {
     font-size: 1rem; 
     cursor: pointer; 
     user-select: none; 
-    position: relative;
     color: white;
     font-weight: 600;
     letter-spacing: 0.025em;
     transition: background-color 0.2s ease;
     white-space: nowrap;
+    background: #000000;
+    border-bottom: 1px solid #374151;
 }
 
 th:hover { 
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Ensure first column header stays black on hover */
+th:first-child:hover {
+    background: #1a1a1a;
 }
 
 th.numeric {
@@ -465,16 +483,28 @@ td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    background: white;
 }
 
-tbody tr:nth-child(even) { 
+/* Ensure alternating row colors work with sticky column */
+tbody tr:nth-child(even) td { 
     background: #f8fafc; 
 }
 
-tbody tr:hover { 
+tbody tr:nth-child(even) td:first-child { 
+    background: #f8fafc; 
+}
+
+tbody tr:nth-child(odd) td:first-child { 
+    background: white; 
+}
+
+tbody tr:hover td { 
     background: #eff6ff;
-    transform: scale(1.001);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+tbody tr:hover td:first-child { 
+    background: #eff6ff;
 }
 
 .pos-badge { 
@@ -616,7 +646,7 @@ tbody tr:hover {
         min-width: fit-content;
     }
     
-    /* Make table more touch-friendly on mobile */
+    /* Mobile table optimizations */
     .table-container {
         max-height: 500px;
     }
@@ -624,5 +654,12 @@ tbody tr:hover {
     th, td {
         padding: 10px 6px;
         font-size: 0.8rem;
+    }
+    
+    /* Adjust sticky column width on mobile */
+    th:first-child, 
+    td:first-child {
+        min-width: 140px;
+        width: 140px;
     }
 }
