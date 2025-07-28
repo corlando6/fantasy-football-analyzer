@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/fantasy-football-analyzer/static/css/main.5813bb65.css",
-    "main.js": "/fantasy-football-analyzer/static/js/main.2a2f19ce.js",
+    "main.css": "/fantasy-football-analyzer/static/css/main.04634612.css",
+    "main.js": "/fantasy-football-analyzer/static/js/main.f6f9f70d.js",
     "static/js/453.3797b43f.chunk.js": "/fantasy-football-analyzer/static/js/453.3797b43f.chunk.js",
     "index.html": "/fantasy-football-analyzer/index.html",
-    "main.5813bb65.css.map": "/fantasy-football-analyzer/static/css/main.5813bb65.css.map",
-    "main.2a2f19ce.js.map": "/fantasy-football-analyzer/static/js/main.2a2f19ce.js.map",
+    "main.04634612.css.map": "/fantasy-football-analyzer/static/css/main.04634612.css.map",
+    "main.f6f9f70d.js.map": "/fantasy-football-analyzer/static/js/main.f6f9f70d.js.map",
     "453.3797b43f.chunk.js.map": "/fantasy-football-analyzer/static/js/453.3797b43f.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.5813bb65.css",
-    "static/js/main.2a2f19ce.js"
+    "static/css/main.04634612.css",
+    "static/js/main.f6f9f70d.js"
   ]
 }
