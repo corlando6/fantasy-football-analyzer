@@ -41,6 +41,7 @@ export default function DataTable({
                 className="filter-input"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
+                inputMode="search"
               />
               <button 
                 className="clear-btn"
