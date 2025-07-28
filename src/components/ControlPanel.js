@@ -27,60 +27,54 @@ export default function ControlPanel({
           <div className="settings-section">
             <h3>League Settings</h3>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>Teams</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentLeagueSettings.teams}
                   onChange={(e) => setCurrentLeagueSettings({...currentLeagueSettings, teams: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>QB</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentLeagueSettings.qb}
                   onChange={(e) => setCurrentLeagueSettings({...currentLeagueSettings, qb: +e.target.value})}
                 />
               </div>
             </div>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>RB</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentLeagueSettings.rb}
                   onChange={(e) => setCurrentLeagueSettings({...currentLeagueSettings, rb: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>WR</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentLeagueSettings.wr}
                   onChange={(e) => setCurrentLeagueSettings({...currentLeagueSettings, wr: +e.target.value})}
                 />
               </div>
             </div>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>TE</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentLeagueSettings.te}
                   onChange={(e) => setCurrentLeagueSettings({...currentLeagueSettings, te: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>FLEX</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentLeagueSettings.flex}
                   onChange={(e) => setCurrentLeagueSettings({...currentLeagueSettings, flex: +e.target.value})}
                 />
@@ -91,83 +85,75 @@ export default function ControlPanel({
           <div className="settings-section">
             <h3>Scoring Settings</h3>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>Rush Yds</label>
                 <input 
                   type="number" 
                   step="0.01"
-                  inputMode="decimal"
                   value={currentScoringSettings.ruYDS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, ruYDS: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>Rush TDs</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentScoringSettings.ruTDS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, ruTDS: +e.target.value})}
                 />
               </div>
             </div>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>Rec Yds</label>
                 <input 
                   type="number" 
                   step="0.01"
-                  inputMode="decimal"
                   value={currentScoringSettings.reYDS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, reYDS: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>Rec TDs</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentScoringSettings.reTDS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, reTDS: +e.target.value})}
                 />
               </div>
             </div>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>Receptions</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentScoringSettings.reREC}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, reREC: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>Pass Yds</label>
                 <input 
                   type="number" 
                   step="0.01"
-                  inputMode="decimal"
                   value={currentScoringSettings.paYDS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, paYDS: +e.target.value})}
                 />
               </div>
             </div>
             <div className="form-row">
-              <div className="form-group">
+              <div>
                 <label>Pass TDs</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentScoringSettings.paTDS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, paTDS: +e.target.value})}
                 />
               </div>
-              <div className="form-group">
+              <div>
                 <label>INTs</label>
                 <input 
                   type="number" 
-                  inputMode="numeric"
                   value={currentScoringSettings.INTS}
                   onChange={(e) => setCurrentScoringSettings({...currentScoringSettings, INTS: +e.target.value})}
                 />

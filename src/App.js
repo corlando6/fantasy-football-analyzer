@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import Header from './components/Header';
-import ControlPanel from './components/ControlPanel';
-import DataTable from './components/DataTable';
 import './App.css';
 
 export default function App() {
@@ -204,60 +201,547 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Get current data for table
-  const getCurrentTableData = () => {
-    if (activeMainTab === 'projections') {
-      return {
-        data: results,
-        activeTab,
-        setActiveTab,
-        filter: currentFilter,
-        setFilter: setCurrentFilter,
-        replacementLevels: results?.replacementLevels,
-        type: 'projections'
-      };
-    } else if (activeMainTab === 'stats') {
-      return {
-        data: statsResults,
-        activeTab: activeStatsTab,
-        setActiveTab: setActiveStatsTab,
-        filter: currentFilter,
-        setFilter: setCurrentFilter,
-        statsView: currentStatsView,
-        setStatsView: setCurrentStatsView,
-        type: 'stats'
-      };
-    }
-    return null;
+  const renderTable = (dataSource, tabType) => {
+    const currentTabData = tabType === 'stats' ? activeStatsTab : activeTab;
+    const players = dataSource?.[currentTabData] || [];
+    const filtered = players.filter(p => 
+      !currentFilter || p.Player.toLowerCase().includes(currentFilter.toLowerCase())
+    );
+
+    return (
+      <div className="table-section">
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Pos</th>
+                <th className="numeric">FPTS</th>
+                {tabType === 'projections' && <th className="numeric">VORP</th>}
+                {tabType === 'stats' && currentStatsView === 'basic' && <th className="numeric">Games</th>}
+                {tabType === 'stats' && currentStatsView === 'advanced' && (
+                  <>
+                    <th className="numeric">Targets</th>
+                    <th className="numeric">ReAirYds</th>
+                    <th className="numeric">ReYAC</th>
+                    <th className="numeric">ReEPA</th>
+                  </>
+                )}
+                <th className="numeric">RuAtt</th>
+                <th className="numeric">RuYds</th>
+                <th className="numeric">RuTD</th>
+                <th className="numeric">Rec</th>
+                <th className="numeric">ReYds</th>
+                <th className="numeric">ReTD</th>
+                <th className="numeric">PaAtt</th>
+                <th className="numeric">PaCmp</th>
+                <th className="numeric">PaYds</th>
+                <th className="numeric">PaTD</th>
+                <th className="numeric">INT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((p, i) => (
+                <tr key={i}>
+                  <td>{p.Player}</td>
+                  <td>{p.Team}</td>
+                  <td><span className="pos-badge">{p.Position}</span></td>
+                  <td className="numeric">{p.FPTS.toFixed(1)}</td>
+                  {tabType === 'projections' && (
+                    <td className={`numeric ${p.VORP > 0 ? 'vorp-pos' : 'vorp-neg'}`}>
+                      {p.VORP.toFixed(1)}
+                    </td>
+                  )}
+                  {tabType === 'stats' && currentStatsView === 'basic' && (
+                    <td className="numeric">{p.Games || 0}</td>
+                  )}
+                  {tabType === 'stats' && currentStatsView === 'advanced' && (
+                    <>
+                      <td className="numeric">{p.targets || 0}</td>
+                      <td className="numeric">{p.receivingAirYards || 0}</td>
+                      <td className="numeric">{p.receivingYAC || 0}</td>
+                      <td className="numeric">{p.receivingEPA?.toFixed(2) || 0}</td>
+                    </>
+                  )}
+                  <td className="numeric">{p.ruATT}</td>
+                  <td className="numeric">{p.ruYDS}</td>
+                  <td className="numeric">{p.ruTDS}</td>
+                  <td className="numeric">{p.reREC}</td>
+                  <td className="numeric">{p.reYDS}</td>
+                  <td className="numeric">{p.reTDS}</td>
+                  <td className="numeric">{p.paATT}</td>
+                  <td className="numeric">{p.paCMP}</td>
+                  <td className="numeric">{p.paYDS}</td>
+                  <td className="numeric">{p.paTDS}</td>
+                  <td className="numeric">{p.INTS}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="app">
-      <Header 
-        activeMainTab={activeMainTab}
-        setActiveMainTab={setActiveMainTab}
-      />
-      
-      <ControlPanel
-        activeMainTab={activeMainTab}
-        leagueSettings={leagueSettings}
-        setLeagueSettings={setLeagueSettings}
-        scoringSettings={scoringSettings}
-        setScoringSettings={setScoringSettings}
-        statsLeagueSettings={statsLeagueSettings}
-        setStatsLeagueSettings={setStatsLeagueSettings}
-        statsScoringSettings={statsScoringSettings}
-        setStatsScoringSettings={setStatsScoringSettings}
-        data={data}
-        statsData={statsData}
-        calculateProjections={calculateProjections}
-        calculateStats={calculateStats}
-      />
+    <div className="container">
+      <div className="header">
+        <div className="header-left">
+          <h1>Fantasy Football '25</h1>
+          <div className="header-tabs">
+            <button 
+              className={`header-tab-btn ${activeMainTab === 'projections' ? 'active' : ''}`}
+              onClick={() => setActiveMainTab('projections')}
+            >
+              Projections
+            </button>
+            <button 
+              className={`header-tab-btn ${activeMainTab === 'stats' ? 'active' : ''}`}
+              onClick={() => setActiveMainTab('stats')}
+            >
+              2024 Stats
+            </button>
+          </div>
+        </div>
+      </div>
 
-      <DataTable
-        {...getCurrentTableData()}
-        exportCSV={exportCSV}
-      />
+      <div className="content">
+        {/* Projections Tab */}
+        {activeMainTab === 'projections' && (
+          <div className="tab-content active">
+            <div className="settings-grid">
+              <div className="settings-section">
+                <h3>League Settings</h3>
+                <div className="form-row">
+                  <div>
+                    <label>Teams</label>
+                    <input 
+                      type="number" 
+                      value={leagueSettings.teams}
+                      onChange={(e) => setLeagueSettings({...leagueSettings, teams: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>QB</label>
+                    <input 
+                      type="number" 
+                      value={leagueSettings.qb}
+                      onChange={(e) => setLeagueSettings({...leagueSettings, qb: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>RB</label>
+                    <input 
+                      type="number" 
+                      value={leagueSettings.rb}
+                      onChange={(e) => setLeagueSettings({...leagueSettings, rb: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>WR</label>
+                    <input 
+                      type="number" 
+                      value={leagueSettings.wr}
+                      onChange={(e) => setLeagueSettings({...leagueSettings, wr: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>TE</label>
+                    <input 
+                      type="number" 
+                      value={leagueSettings.te}
+                      onChange={(e) => setLeagueSettings({...leagueSettings, te: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>FLEX</label>
+                    <input 
+                      type="number" 
+                      value={leagueSettings.flex}
+                      onChange={(e) => setLeagueSettings({...leagueSettings, flex: +e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-section">
+                <h3>Scoring Settings</h3>
+                <div className="form-row">
+                  <div>
+                    <label>Rush Yds</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={scoringSettings.ruYDS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, ruYDS: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Rush TDs</label>
+                    <input 
+                      type="number" 
+                      value={scoringSettings.ruTDS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, ruTDS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>Rec Yds</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={scoringSettings.reYDS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, reYDS: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Rec TDs</label>
+                    <input 
+                      type="number" 
+                      value={scoringSettings.reTDS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, reTDS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>Receptions</label>
+                    <input 
+                      type="number" 
+                      value={scoringSettings.reREC}
+                      onChange={(e) => setScoringSettings({...scoringSettings, reREC: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Pass Yds</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={scoringSettings.paYDS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, paYDS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>Pass TDs</label>
+                    <input 
+                      type="number" 
+                      value={scoringSettings.paTDS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, paTDS: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>INTs</label>
+                    <input 
+                      type="number" 
+                      value={scoringSettings.INTS}
+                      onChange={(e) => setScoringSettings({...scoringSettings, INTS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="calculate-section">
+              <button 
+                className="btn calculate-btn" 
+                onClick={calculateProjections}
+                disabled={!data}
+              >
+                Build Projections
+              </button>
+            </div>
+
+            {results && (
+              <div className="results">
+                <div className="controls">
+                  <h2>2025 Projections</h2>
+                  <div className="filter-controls">
+                    <input 
+                      type="text" 
+                      placeholder="Filter players..." 
+                      className="filter-input"
+                      value={currentFilter}
+                      onChange={(e) => setCurrentFilter(e.target.value)}
+                    />
+                    <button 
+                      className="clear-btn"
+                      onClick={() => setCurrentFilter('')}
+                    >
+                      Clear
+                    </button>
+                    <button 
+                      className="btn export-btn"
+                      onClick={() => exportCSV('projections')}
+                    >
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+
+                {results.replacementLevels && (
+                  <div className="replacement-section">
+                    <h4>Replacement Levels</h4>
+                    <div className="replacement-grid">
+                      {Object.entries(results.replacementLevels).map(([pos, val]) => (
+                        <div key={pos} className="replacement-item">
+                          <div className="label">{pos}</div>
+                          <div className="value">{val.toFixed(1)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pos-tabs">
+                  <button 
+                    className={`pos-tab ${activeTab === 'ALL' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('ALL')}
+                  >
+                    ALL
+                  </button>
+                  {['QB', 'RB', 'WR', 'TE'].map(pos => (
+                    <button 
+                      key={pos}
+                      className={`pos-tab ${activeTab === pos ? 'active' : ''}`}
+                      onClick={() => setActiveTab(pos)}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
+
+                {renderTable(results, 'projections')}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Stats Tab */}
+        {activeMainTab === 'stats' && (
+          <div className="tab-content active">
+            <div className="settings-grid">
+              <div className="settings-section">
+                <h3>League Settings</h3>
+                <div className="form-row">
+                  <div>
+                    <label>Teams</label>
+                    <input 
+                      type="number" 
+                      value={statsLeagueSettings.teams}
+                      onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, teams: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>QB</label>
+                    <input 
+                      type="number" 
+                      value={statsLeagueSettings.qb}
+                      onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, qb: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>RB</label>
+                    <input 
+                      type="number" 
+                      value={statsLeagueSettings.rb}
+                      onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, rb: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>WR</label>
+                    <input 
+                      type="number" 
+                      value={statsLeagueSettings.wr}
+                      onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, wr: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>TE</label>
+                    <input 
+                      type="number" 
+                      value={statsLeagueSettings.te}
+                      onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, te: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>FLEX</label>
+                    <input 
+                      type="number" 
+                      value={statsLeagueSettings.flex}
+                      onChange={(e) => setStatsLeagueSettings({...statsLeagueSettings, flex: +e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-section">
+                <h3>Scoring Settings</h3>
+                <div className="form-row">
+                  <div>
+                    <label>Rush Yds</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={statsScoringSettings.ruYDS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, ruYDS: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Rush TDs</label>
+                    <input 
+                      type="number" 
+                      value={statsScoringSettings.ruTDS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, ruTDS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>Rec Yds</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={statsScoringSettings.reYDS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, reYDS: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Rec TDs</label>
+                    <input 
+                      type="number" 
+                      value={statsScoringSettings.reTDS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, reTDS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>Receptions</label>
+                    <input 
+                      type="number" 
+                      value={statsScoringSettings.reREC}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, reREC: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>Pass Yds</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={statsScoringSettings.paYDS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, paYDS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div>
+                    <label>Pass TDs</label>
+                    <input 
+                      type="number" 
+                      value={statsScoringSettings.paTDS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, paTDS: +e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label>INTs</label>
+                    <input 
+                      type="number" 
+                      value={statsScoringSettings.INTS}
+                      onChange={(e) => setStatsScoringSettings({...statsScoringSettings, INTS: +e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="calculate-section">
+              <button 
+                className="btn calculate-btn" 
+                onClick={calculateStats}
+                disabled={!statsData}
+              >
+                Calculate 2024 Stats
+              </button>
+            </div>
+
+            {statsResults && (
+              <div className="results">
+                <div className="controls">
+                  <h2>2024 Results</h2>
+                  <div className="filter-controls">
+                    <input 
+                      type="text" 
+                      placeholder="Filter players..." 
+                      className="filter-input"
+                      value={currentFilter}
+                      onChange={(e) => setCurrentFilter(e.target.value)}
+                    />
+                    <button 
+                      className="clear-btn"
+                      onClick={() => setCurrentFilter('')}
+                    >
+                      Clear
+                    </button>
+                    <button 
+                      className="btn export-btn"
+                      onClick={() => exportCSV('stats')}
+                    >
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+
+                <div className="stats-view-tabs">
+                  <button 
+                    className={`stats-view-tab ${currentStatsView === 'basic' ? 'active' : ''}`}
+                    onClick={() => setCurrentStatsView('basic')}
+                  >
+                    Basic Stats
+                  </button>
+                  <button 
+                    className={`stats-view-tab ${currentStatsView === 'advanced' ? 'active' : ''}`}
+                    onClick={() => setCurrentStatsView('advanced')}
+                  >
+                    Advanced Stats
+                  </button>
+                </div>
+
+                <div className="pos-tabs">
+                  <button 
+                    className={`pos-tab ${activeStatsTab === 'ALL' ? 'active' : ''}`}
+                    onClick={() => setActiveStatsTab('ALL')}
+                  >
+                    ALL
+                  </button>
+                  {['QB', 'RB', 'WR', 'TE'].map(pos => (
+                    <button 
+                      key={pos}
+                      className={`pos-tab ${activeStatsTab === pos ? 'active' : ''}`}
+                      onClick={() => setActiveStatsTab(pos)}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
+
+                {renderTable(statsResults, 'stats')}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
